@@ -1,5 +1,7 @@
 # Rest-Panda
 
+Simple RestAPI Server
+
 ## Installation
 
 ```
