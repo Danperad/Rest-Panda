@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text.Json;
 
 namespace RestPanda.Requests;
 
@@ -50,5 +51,25 @@ public class PandaRequest
         bodyStream.Close();
         reader.Close();
         return true;
+    }
+    
+    /// <summary>
+    /// Get object from request
+    /// </summary>
+    /// <typeparam name="T">Type of object</typeparam>
+    /// <returns></returns>
+    public T? GetObject<T>()
+    {
+        return (T?) GetObjectFromBody<T>();
+    }
+
+    private object? GetObjectFromBody<T>()
+    {
+        if (TryGetBody(out var body))
+        {
+            return JsonSerializer.Deserialize<T>(body);
+        }
+
+        return null;
     }
 }

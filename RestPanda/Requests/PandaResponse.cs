@@ -9,6 +9,7 @@ namespace RestPanda.Requests;
 public class PandaResponse
 {
     internal HttpListenerResponse Response { get; }
+    private bool _isComplete = false;
 
     /// <summary>
     /// Main response ctor
@@ -24,11 +25,13 @@ public class PandaResponse
     /// </summary>
     public void Send()
     {
+        if (_isComplete) return;
         var buffer = Encoding.UTF8.GetBytes("");
         Response.ContentLength64 = buffer.Length;
         var output = Response.OutputStream;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
+        _isComplete = true;
     }
 
     /// <summary>

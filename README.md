@@ -47,12 +47,8 @@ public class GetString
     public static void SetUser(PandaRequest request, PandaResponse response)
     {
         response.AddHeader("Time", DateTime.Now.ToString("O"));
-        if (request.TryGetBody(out var body))
-        {
-            var user = JsonSerializer.Deserialize<User>(body);
-            if (user?.Name != null) response.Send(user.Name);
-            return;
-        }
+        var user = request.GetObject<User>();
+        if (user?.Name != null) response.Send(user.Name);
         response.Send();
     }
 }
