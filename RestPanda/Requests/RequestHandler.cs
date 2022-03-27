@@ -16,6 +16,7 @@ public class RequestHandler : Attribute
     {
         Path = path;
         if (path == "/") Path = "";
+        else if (!Path.StartsWith("/")) Path = "/" + Path;
     }
     public RequestHandler()
     {

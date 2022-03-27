@@ -16,6 +16,7 @@ public class Post : Attribute, IRequest
     {
         Path = path;
         if (Path == "") Path = "/";
+        else if (!Path.StartsWith("/")) Path = "/" + Path;
     }
 
     public Post()
