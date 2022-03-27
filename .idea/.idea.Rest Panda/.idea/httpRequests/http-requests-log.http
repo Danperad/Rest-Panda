@@ -1,0 +1,177 @@
+﻿POST http://localhost:8888/auth/getstr
+Content-Type: application/json
+
+{"name": "Petya"}
+
+<> 2022-03-27T200051.200.json
+
+###
+
+POST http://localhost:8888/auth/getstr
+Content-Type: application/json
+
+{"name": "Petya"}
+
+<> 2022-03-27T195800.200.json
+
+###
+
+POST http://localhost:8888/auth/getstr
+Content-Type: application/json
+
+{"name": "Petya"}
+
+###
+
+POST http://localhost:8888/auth/getstr
+Content-Type: application/json
+
+{"name": "Petya"}
+
+###
+
+GET http://localhost:8888/auth/getstr?user=Ivan
+Accept: application/json
+
+<> 2022-03-27T195302.200.json
+
+###
+
+POST http://localhost:8888/auth/sign
+Content-Type: application/json
+
+{"login": "0000", "pass": "0000"}
+
+<> 2022-03-27T175309.200.json
+
+###
+
+GET http://localhost:8888/auth/sign?id=6
+Accept: application/json
+
+<> 2022-03-27T173054.200.json
+
+###
+
+GET http://localhost:8888/auth/sign
+Accept: application/json
+
+<> 2022-03-27T161603.200.json
+
+###
+
+GET http://localhost:8888/auth/sign/
+Accept: application/json
+
+<> 2022-03-27T161554.404.json
+
+###
+
+GET http://localhost:8888/auth/sign
+Accept: application/json
+
+<> 2022-03-27T160725.200.json
+
+###
+
+GET http://localhost:8888/auth/sig
+Accept: application/json
+
+<> 2022-03-27T160709.404.json
+
+###
+
+GET http://localhost:8888/auth/sign
+Accept: application/json
+
+<> 2022-03-27T160542.200.json
+
+###
+
+GET http://localhost:8888/auth/sign
+Accept: application/json
+
+<> 2022-03-27T155849.200.json
+
+###
+
+GET http://localhost:8888/auth/sign
+Accept: application/json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T133417.200.json
+
+###
+
+GET http://localhost:8888/s
+Accept: application/json
+
+<> 2022-03-27T133407.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T133351.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T133346.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T132619.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T132317.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T132056.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T132012.200.txt
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T130622.200.json
+
+###
+
+GET http://localhost:8888
+Accept: application/json
+
+<> 2022-03-27T130306.200.txt
+
+###
+

@@ -2,25 +2,42 @@
 
 namespace RestPanda.Requests;
 
+/// <summary>
+/// Request class
+/// </summary>
 public class PandaRequest
 {
     private HttpListenerRequest _request;
     public Dictionary<string, string> Params { get; } = new ();
 
+    /// <summary>
+    /// Main request ctor
+    /// </summary>
+    /// <param name="request">Http request</param>
     internal PandaRequest(HttpListenerRequest request)
     {
         _request = request;
     }
+    /// <summary>
+    /// Request constructor with parameters
+    /// </summary>
+    /// <param name="request">Http request</param>
+    /// <param name="param">Request parameters</param>
     internal PandaRequest(HttpListenerRequest request, string param) : this(request)
     {
         var s = param.Split('&');
         foreach (var keys in s)
         {
             var d = keys.Split('=');
-            this.Params[d[0]] = d.Length == 2 ? d[1] : "";
+            Params[d[0]] = d.Length == 2 ? d[1] : "";
         }
     }
 
+    /// <summary>
+    /// Getting the request body
+    /// </summary>
+    /// <param name="body">Request Body</param>
+    /// <returns>Is there a request body</returns>
     public bool TryGetBody(out string body)
     {
         body = "";

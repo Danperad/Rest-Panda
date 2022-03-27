@@ -1,11 +1,14 @@
 ﻿using System.Net;
+using RestPanda.Exceptions;
 using RestPanda.Requests;
 
 namespace RestPanda;
 
 public class PandaServer
 {
-    private readonly string _uri;
+    #region Props
+
+    private readonly IEnumerable<string> _urls;
     private readonly HttpListener _listener;
     private readonly Configuration? _configuration;
 
@@ -13,18 +16,43 @@ public class PandaServer
 
     private readonly Dictionary<string, Type> _types = new();
 
-    public PandaServer(string url, Type caller)
+    #endregion
+
+    #region Constructors
+
+    /// <summary>
+    /// Main .ctor
+    /// </summary>
+    /// <param name="urls">List of listening addresses</param>
+    /// <param name="caller">Class from project with request handlers</param>
+    public PandaServer(List<string> urls, Type caller)
     {
-        _uri = url;
+        if (urls.Count == 0) throw new EmptyUrlsException("Url list must be not empty");
+        _urls = urls;
         _listener = new HttpListener();
-        _listener.Prefixes.Add(_uri);
+        foreach (var url in urls)
+        {
+            _listener.Prefixes.Add(url);
+        }
         FindAllHandlers(caller);
     }
-
-    public PandaServer(string url, Configuration configuration, Type caller) : this(url, caller)
+    /// <summary>
+    /// Configuration Server .ctor
+    /// </summary>
+    /// <param name="urls">List of listening addresses</param>
+    /// <param name="configuration">Configuration class</param>
+    /// <param name="caller">Class from project with request handlers</param>    
+    public PandaServer(List<string> urls, Configuration configuration, Type caller) : this(urls, caller)
     {
         _configuration = configuration;
     }
+
+    #endregion
+
+    /// <summary>
+    /// Search all request handler
+    /// </summary>
+    /// <param name="caller">Class from project with request handlers</param>
     private void FindAllHandlers(Type caller)
     {
         var s = caller.Assembly.GetTypes();
@@ -37,7 +65,10 @@ public class PandaServer
             }
         }
     }
-    
+
+    /// <summary>
+    /// Start listen server
+    /// </summary>
     public async Task Start()
     {
         _listener.Start();
@@ -52,6 +83,9 @@ public class PandaServer
         }
     }
 
+    /// <summary>
+    /// Stop listen server
+    /// </summary>
     public void Stop()
     {
         if (!_listener.IsListening) return;
@@ -60,6 +94,10 @@ public class PandaServer
         _isListen = false;
     }
 
+    /// <summary>
+    /// Additional customization of each response
+    /// </summary>
+    /// <param name="response"></param>
     private void ConfigResponse(ref HttpListenerResponse response)
     {
         if (_configuration is null) return;
@@ -78,11 +116,17 @@ public class PandaServer
         }
     }
 
+    /// <summary>
+    /// Finding and calling the desired handler
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="response"></param>
+    /// <returns></returns>
     private Task FindHandler(HttpListenerRequest request, HttpListenerResponse response)
     {
         var rawUrl = request.RawUrl;
         var requestHttpMethod = request.HttpMethod;
-        
+
         var newResponse = new PandaResponse(response);
         PandaRequest newRequest;
         if (rawUrl is null)
@@ -116,28 +160,28 @@ public class PandaServer
             path = rawUrl;
             newRequest = new PandaRequest(request);
         }
-        
+
         var req = path[path.LastIndexOf("/", StringComparison.Ordinal)..];
         path = path[..path.LastIndexOf("/", StringComparison.Ordinal)];
-        
+
         if (!_types.ContainsKey(path))
         {
             Error.NotFound(newResponse);
             return Task.CompletedTask;
         }
-        
+
         foreach (var method in _types[path].GetMethods())
         {
             var ss = method.GetCustomAttributes(httpMethod, false);
             if (ss.Length <= 0) continue;
-                
+
             var obj = ((IRequest) ss[0]).Path;
             if (obj != req) continue;
-                
-            method.Invoke(null, new object?[]{newRequest, newResponse});
+
+            method.Invoke(null, new object?[] {newRequest, newResponse});
             return Task.CompletedTask;
         }
-        
+
         Error.NotFound(newResponse);
         return Task.CompletedTask;
     }
