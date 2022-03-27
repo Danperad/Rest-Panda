@@ -15,5 +15,10 @@ public class Get : Attribute, IRequest
     public Get(string path)
     {
         Path = path;
+        if (Path == "") Path = "/";
+    }
+    public Get()
+    {
+        Path = "/";
     }
 }

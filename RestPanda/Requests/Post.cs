@@ -15,5 +15,11 @@ public class Post : Attribute, IRequest
     public Post(string path)
     {
         Path = path;
+        if (Path == "") Path = "/";
+    }
+
+    public Post()
+    {
+        Path = "/";
     }
 }

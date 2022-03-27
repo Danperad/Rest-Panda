@@ -8,7 +8,6 @@ public class PandaServer
 {
     #region Props
 
-    private readonly IEnumerable<string> _urls;
     private readonly HttpListener _listener;
     private readonly Configuration? _configuration;
 
@@ -20,6 +19,18 @@ public class PandaServer
 
     #region Constructors
 
+    public PandaServer(string url, Type caller)
+    {
+        _listener = new HttpListener();
+        _listener.Prefixes.Add(url);
+        FindAllHandlers(caller);
+    }
+    
+    public PandaServer(string url, Configuration configuration, Type caller) : this(url, caller)
+    {
+        _configuration = configuration;
+    }
+
     /// <summary>
     /// Main .ctor
     /// </summary>
@@ -28,14 +39,15 @@ public class PandaServer
     public PandaServer(List<string> urls, Type caller)
     {
         if (urls.Count == 0) throw new EmptyUrlsException("Url list must be not empty");
-        _urls = urls;
         _listener = new HttpListener();
         foreach (var url in urls)
         {
             _listener.Prefixes.Add(url);
         }
+
         FindAllHandlers(caller);
     }
+
     /// <summary>
     /// Configuration Server .ctor
     /// </summary>
@@ -64,6 +76,7 @@ public class PandaServer
                 _types[((RequestHandler) ss[0]).Path] = type;
             }
         }
+        if (_types.Count == 0) throw new NoHandlersException("Handlers not found");
     }
 
     /// <summary>

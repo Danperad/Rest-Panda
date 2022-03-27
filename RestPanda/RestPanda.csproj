@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <PackageId>RestPanda</PackageId>
-        <Version>1.1.1</Version>
+        <Version>1.1.2</Version>
         <Authors>Kokorin (Danperad) Egor</Authors>
         <TargetFramework>net6.0</TargetFramework>
         <RootNamespace>RestPanda</RootNamespace>

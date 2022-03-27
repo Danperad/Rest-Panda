@@ -15,5 +15,10 @@ public class RequestHandler : Attribute
     public RequestHandler(string path)
     {
         Path = path;
+        if (path == "/") Path = "";
+    }
+    public RequestHandler()
+    {
+        Path = "";
     }
 }
