@@ -39,12 +39,13 @@ public class PandaResponse
     /// </summary>
     /// <param name="response">Response Body</param>
     public void Send(string response)
-    {
+    { if (_isComplete) return;
         var buffer = Encoding.UTF8.GetBytes(response);
         Response.ContentLength64 = buffer.Length;
         var output = Response.OutputStream;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
+        _isComplete = true;
     }
     
     /// <summary>

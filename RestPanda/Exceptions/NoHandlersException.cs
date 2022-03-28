@@ -1,4 +1,6 @@
-﻿namespace RestPanda.Exceptions;
+﻿using System;
+
+namespace RestPanda.Exceptions;
 
 public class NoHandlersException : Exception
 {

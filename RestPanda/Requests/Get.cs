@@ -1,4 +1,6 @@
-﻿namespace RestPanda.Requests;
+﻿using System;
+
+namespace RestPanda.Requests;
 
 /// <summary>
 /// Attribute for GET requests
