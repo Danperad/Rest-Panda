@@ -51,7 +51,7 @@ public class GetString
         response.AddHeader("Time", DateTime.Now.ToString("O"));
         var user = request.GetObject<User>();
         if (user?.Name != null) response.Send(user.Name);
-        response.Send();
+        response.Send("");
     }
 }
 ```

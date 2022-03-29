@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text;
+using System.Text.Json;
 
 namespace RestPanda.Requests;
 
@@ -21,17 +22,14 @@ public class PandaResponse
     }
     
     /// <summary>
-    /// Sending an empty response
+    /// Sending object (Serialized to json)
     /// </summary>
-    public void Send()
+    /// <param name="obj"></param>
+    public void Send(object obj)
     {
-        if (_isComplete) return;
-        var buffer = Encoding.UTF8.GetBytes("");
-        Response.ContentLength64 = buffer.Length;
-        var output = Response.OutputStream;
-        output.Write(buffer, 0, buffer.Length);
-        output.Close();
-        _isComplete = true;
+        var result = JsonSerializer.Serialize(obj);
+        SetContentType("application/json");
+        Send(result);
     }
 
     /// <summary>
@@ -39,13 +37,14 @@ public class PandaResponse
     /// </summary>
     /// <param name="response">Response Body</param>
     public void Send(string response)
-    { if (_isComplete) return;
+    { 
+        if (_isComplete) return;
         var buffer = Encoding.UTF8.GetBytes(response);
         Response.ContentLength64 = buffer.Length;
         var output = Response.OutputStream;
+        _isComplete = true;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
-        _isComplete = true;
     }
     
     /// <summary>
@@ -65,5 +64,10 @@ public class PandaResponse
     public void AddHeader(string key, string value)
     {
         Response.AddHeader(key, value);
+    }
+    
+    public void SetContentType(string value)
+    {
+        Response.ContentType = value;
     }
 }

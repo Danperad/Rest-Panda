@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using RestPanda.Exceptions;
 using RestPanda.Requests;
 
@@ -95,7 +92,7 @@ public class PandaServer
             var request = context.Request;
             var response = context.Response;
             if (_configuration is not null) ConfigResponse(ref response);
-            await FindHandler(request, response);
+            FindHandler(request, response);
         }
     }
 
@@ -137,8 +134,7 @@ public class PandaServer
     /// </summary>
     /// <param name="request"></param>
     /// <param name="response"></param>
-    /// <returns></returns>
-    private Task FindHandler(HttpListenerRequest request, HttpListenerResponse response)
+    private void FindHandler(HttpListenerRequest request, HttpListenerResponse response)
     {
         var rawUrl = request.RawUrl;
         var requestHttpMethod = request.HttpMethod;
@@ -148,7 +144,7 @@ public class PandaServer
         if (rawUrl is null)
         {
             Error.NotFound(newResponse);
-            return Task.CompletedTask;
+            return;
         }
 
         Type httpMethod;
@@ -162,7 +158,7 @@ public class PandaServer
                 break;
             default:
                 Error.NotFound(newResponse);
-                return Task.CompletedTask;
+                return;
         }
 
         string path;
@@ -183,7 +179,7 @@ public class PandaServer
         if (!_types.ContainsKey(path))
         {
             Error.NotFound(newResponse);
-            return Task.CompletedTask;
+            return;
         }
 
         foreach (var method in _types[path].GetMethods())
@@ -193,12 +189,10 @@ public class PandaServer
 
             var obj = ((IRequest) ss[0]).Path;
             if (obj != req) continue;
-
             method.Invoke(null, new object?[] {newRequest, newResponse});
-            return Task.CompletedTask;
+            return;
         }
 
         Error.NotFound(newResponse);
-        return Task.CompletedTask;
     }
 }
