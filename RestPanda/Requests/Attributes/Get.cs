@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RestPanda.Requests;
+﻿namespace RestPanda.Requests.Attributes;
 
 /// <summary>
 /// Attribute for GET requests
@@ -17,11 +15,10 @@ public class Get : Attribute, IRequest
     public Get(string path)
     {
         Path = path;
-        if (Path == "") Path = "/";
-        else if (!Path.StartsWith("/")) Path = "/" + Path;
+        if (!Path.StartsWith("/") && Path != "") Path = "/" + Path;
     }
     public Get()
     {
-        Path = "/";
+        Path = "";
     }
 }

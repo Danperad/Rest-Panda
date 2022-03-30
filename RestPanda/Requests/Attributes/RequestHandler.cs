@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RestPanda.Requests;
+﻿namespace RestPanda.Requests.Attributes;
 
 /// <summary>
 /// Attribute for request handler
@@ -17,8 +15,7 @@ public class RequestHandler : Attribute
     public RequestHandler(string path)
     {
         Path = path;
-        if (path == "/") Path = "";
-        else if (!Path.StartsWith("/")) Path = "/" + Path;
+        if (Path.StartsWith("/")) Path = Path.Remove(0,1);
     }
     public RequestHandler()
     {

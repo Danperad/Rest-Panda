@@ -1,6 +1,6 @@
 ﻿namespace RestPanda.Requests;
 
-internal static class Error
+internal static class MainError
 {
     /// <summary>
     /// Reply if there is no matching request

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace RestPanda.Requests;
+﻿namespace RestPanda.Requests.Attributes;
 
 /// <summary>
 /// Attribute for POST requests
@@ -17,12 +15,11 @@ public class Post : Attribute, IRequest
     public Post(string path)
     {
         Path = path;
-        if (Path == "") Path = "/";
-        else if (!Path.StartsWith("/")) Path = "/" + Path;
+        if (!Path.StartsWith("/") && Path != "") Path = "/" + Path;
     }
 
     public Post()
     {
-        Path = "/";
+        Path = "";
     }
 }

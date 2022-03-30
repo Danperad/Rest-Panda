@@ -1,6 +1,8 @@
 ﻿using System.Net;
+using System.Reflection;
 using RestPanda.Exceptions;
 using RestPanda.Requests;
+using RestPanda.Requests.Attributes;
 
 namespace RestPanda;
 
@@ -12,8 +14,10 @@ public class PandaServer
     private readonly Configuration? _configuration;
 
     private bool _isListen = false;
+    
+    private readonly Dictionary<(string, string), MethodInfo> _methods = new();
 
-    private readonly Dictionary<string, Type> _types = new();
+    private readonly Dictionary<HttpStatusCode, MethodInfo> _errors = new();
 
     #endregion
 
@@ -25,7 +29,7 @@ public class PandaServer
         _listener.Prefixes.Add(url);
         FindAllHandlers(caller);
     }
-    
+
     public PandaServer(string url, Configuration configuration, Type caller) : this(url, caller)
     {
         _configuration = configuration;
@@ -67,16 +71,33 @@ public class PandaServer
     /// <param name="caller">Class from project with request handlers</param>
     private void FindAllHandlers(Type caller)
     {
-        var s = caller.Assembly.GetTypes();
-        foreach (var type in s)
+        foreach (var type in caller.Assembly.GetTypes())
         {
-            var ss = type.GetCustomAttributes(typeof(RequestHandler), false);
-            if (ss.Length > 0)
+            var handler = type.GetCustomAttribute(typeof(RequestHandler), false);
+            if (handler is null)
             {
-                _types[((RequestHandler) ss[0]).Path] = type;
+                handler = type.GetCustomAttribute(typeof(ErrorHandler), false);
+                if (handler is null) continue;
+                foreach (var method in type.GetMethods())
+                {
+                    var methodAtr = method.GetCustomAttribute(typeof(Error));
+                    if (methodAtr is null) continue;
+                    _errors[((Error) methodAtr).Code] = method;
+                }
+                continue;
+            }
+            var mainPath = ((RequestHandler) handler).Path;
+            foreach (var method in type.GetMethods())
+            {
+                var methodAtr = method.GetCustomAttribute(typeof(Get));
+                if (methodAtr is not null)
+                    _methods[("GET", mainPath + ((Get) methodAtr).Path)] = method;
+                else if ((methodAtr = method.GetCustomAttribute(typeof(Post))) is not null)
+                    _methods[("POST", mainPath + ((Post) methodAtr).Path)] = method;
             }
         }
-        if (_types.Count == 0) throw new NoHandlersException("Handlers not found");
+
+        if (_methods.Count == 0) throw new NoHandlersException("Handlers not found");
     }
 
     /// <summary>
@@ -143,24 +164,10 @@ public class PandaServer
         PandaRequest newRequest;
         if (rawUrl is null)
         {
-            Error.NotFound(newResponse);
+            MainError.NotFound(newResponse);
             return;
         }
-
-        Type httpMethod;
-        switch (requestHttpMethod)
-        {
-            case "GET":
-                httpMethod = typeof(Get);
-                break;
-            case "POST":
-                httpMethod = typeof(Post);
-                break;
-            default:
-                Error.NotFound(newResponse);
-                return;
-        }
-
+        rawUrl = rawUrl.Remove(0, 1);
         string path;
         if (rawUrl.Contains('?'))
         {
@@ -173,26 +180,17 @@ public class PandaServer
             newRequest = new PandaRequest(request);
         }
 
-        var req = path[path.LastIndexOf("/", StringComparison.Ordinal)..];
-        path = path[..path.LastIndexOf("/", StringComparison.Ordinal)];
-
-        if (!_types.ContainsKey(path))
+        if (_methods.TryGetValue((requestHttpMethod, path), out var method))
         {
-            Error.NotFound(newResponse);
-            return;
-        }
-
-        foreach (var method in _types[path].GetMethods())
-        {
-            var ss = method.GetCustomAttributes(httpMethod, false);
-            if (ss.Length <= 0) continue;
-
-            var obj = ((IRequest) ss[0]).Path;
-            if (obj != req) continue;
             method.Invoke(null, new object?[] {newRequest, newResponse});
             return;
         }
 
-        Error.NotFound(newResponse);
+        if (_errors.TryGetValue(HttpStatusCode.NotFound, out method))
+        {
+            method.Invoke(null, new object?[] {newRequest, newResponse});
+            return;
+        }
+        MainError.NotFound(newResponse);
     }
 }
