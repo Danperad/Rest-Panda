@@ -14,12 +14,11 @@ Simple RestAPI Server
 ```csharp
 using RestPanda;
 
-var config = new Configuration
-{
-    ContentType = "application/json"
-};
-var urls = new List<string>(new []{"http://localhost:8888/", "http://127.0.0.1:8889/"});
-var server = new PandaServer(urls, config, typeof(Program));
+var config = new PandaConfig();
+
+var urls = new List<Uri>(new []{new Uri("http://localhost:8888/"),new Uri("http://127.0.0.1:8889/")});
+using var server = new PandaServer(config, typeof(Program), urls);
+
 server.Start();
 Console.Read();
 server.Stop();
