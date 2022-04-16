@@ -11,9 +11,7 @@ public class PandaResponse
 {
     internal HttpListenerResponse Response { get; }
     private bool _isComplete = false;
-
-    public Stream OutputStream => Response.OutputStream;
-
+    
     /// <summary>
     /// Main response ctor
     /// </summary>
@@ -47,6 +45,30 @@ public class PandaResponse
         _isComplete = true;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
+    }
+
+    public void SendFile(FileStream fs)
+    {
+        var filename = Path.GetFileName(fs.Name);
+        Response.ContentLength64 = fs.Length;
+        Response.SendChunked = false;
+        Response.ContentType = System.Net.Mime.MediaTypeNames.Application.Octet;
+        Response.AddHeader("Content-disposition", "attachment; filename=" + filename);
+        var buffer = new byte[64 * 1024];
+        using (var bw = new BinaryWriter(Response.OutputStream))
+        {
+            int read;
+            while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                bw.Write(buffer, 0, read);
+                bw.Flush();
+            }
+
+            bw.Close();
+        }
+        Response.StatusCode = (int)HttpStatusCode.OK;
+        Response.StatusDescription = "OK";
+        Response.OutputStream.Close();
     }
     
     /// <summary>
