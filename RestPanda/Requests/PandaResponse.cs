@@ -12,6 +12,8 @@ public class PandaResponse
     internal HttpListenerResponse Response { get; }
     private bool _isComplete = false;
 
+    public Stream OutputStream => Response.OutputStream;
+
     /// <summary>
     /// Main response ctor
     /// </summary>
@@ -54,6 +56,7 @@ public class PandaResponse
     /// <param name="value"></param>
     public void AddHeader(HttpResponseHeader key, string value)
     {
+        if (key == HttpResponseHeader.Server) return;
         Response.Headers[key] = value;
     }
     /// <summary>
@@ -63,6 +66,7 @@ public class PandaResponse
     /// <param name="value"></param>
     public void AddHeader(string key, string value)
     {
+        if (key == "Server") return;
         Response.AddHeader(key, value);
     }
     

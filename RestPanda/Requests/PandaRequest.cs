@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 
 namespace RestPanda.Requests;
@@ -13,6 +11,7 @@ public class PandaRequest
     private HttpListenerRequest _request;
     public Dictionary<string, string> Params { get; } = new ();
 
+    public Stream InputStream => _request.InputStream;
     /// <summary>
     /// Main request ctor
     /// </summary>

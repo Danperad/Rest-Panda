@@ -6,15 +6,14 @@ using RestPanda.Requests.Attributes;
 
 namespace RestPanda;
 
-public class PandaServer
+public sealed class PandaServer : IDisposable
 {
     #region Props
 
     private readonly HttpListener _listener;
-    private readonly Configuration? _configuration;
+    private readonly IList<Uri> _urisList;
+    private readonly PandaConfig _pandaConfig;
 
-    private bool _isListen = false;
-    
     private readonly Dictionary<(string, string), MethodInfo> _methods = new();
 
     private readonly Dictionary<HttpStatusCode, MethodInfo> _errors = new();
@@ -23,44 +22,22 @@ public class PandaServer
 
     #region Constructors
 
-    public PandaServer(string url, Type caller)
+    public PandaServer(Type caller, params Uri[] urls) : this(new PandaConfig(), caller, urls)
+    {
+    }
+
+    public PandaServer(PandaConfig pandaConfig, Type caller, params Uri[] urls) : this(pandaConfig, caller,
+        urls.ToList())
+    {
+    }
+
+    public PandaServer(PandaConfig pandaConfig, Type caller, IList<Uri> urls)
     {
         _listener = new HttpListener();
-        _listener.Prefixes.Add(url);
+        _urisList = urls;
+        if (_urisList.Count == 0) throw new EmptyUrlsException();
+        _pandaConfig = pandaConfig;
         FindAllHandlers(caller);
-    }
-
-    public PandaServer(string url, Configuration configuration, Type caller) : this(url, caller)
-    {
-        _configuration = configuration;
-    }
-
-    /// <summary>
-    /// Main .ctor
-    /// </summary>
-    /// <param name="urls">List of listening addresses</param>
-    /// <param name="caller">Class from project with request handlers</param>
-    public PandaServer(List<string> urls, Type caller)
-    {
-        if (urls.Count == 0) throw new EmptyUrlsException("Url list must be not empty");
-        _listener = new HttpListener();
-        foreach (var url in urls)
-        {
-            _listener.Prefixes.Add(url);
-        }
-
-        FindAllHandlers(caller);
-    }
-
-    /// <summary>
-    /// Configuration Server .ctor
-    /// </summary>
-    /// <param name="urls">List of listening addresses</param>
-    /// <param name="configuration">Configuration class</param>
-    /// <param name="caller">Class from project with request handlers</param>    
-    public PandaServer(List<string> urls, Configuration configuration, Type caller) : this(urls, caller)
-    {
-        _configuration = configuration;
     }
 
     #endregion
@@ -84,8 +61,10 @@ public class PandaServer
                     if (methodAtr is null) continue;
                     _errors[((Error) methodAtr).Code] = method;
                 }
+
                 continue;
             }
+
             var mainPath = ((RequestHandler) handler).Path;
             foreach (var method in type.GetMethods())
             {
@@ -100,21 +79,41 @@ public class PandaServer
         if (_methods.Count == 0) throw new NoHandlersException("Handlers not found");
     }
 
+    private void Initialize()
+    {
+        if (_listener.Prefixes.Count != 0) return;
+        
+        foreach (var uri in _urisList)
+            _listener.Prefixes.Add($"{uri.Scheme}://{uri.Host}:{uri.Port}/");
+    }
+
     /// <summary>
     /// Start listen server
     /// </summary>
-    public async Task Start()
+    public void Start()
     {
+        if (_listener.IsListening) return;
+        Initialize();
+        
         _listener.Start();
-        _isListen = true;
-        while (_isListen)
+        Task.Run(() =>
         {
-            var context = await _listener.GetContextAsync();
-            var request = context.Request;
-            var response = context.Response;
-            if (_configuration is not null) ConfigResponse(ref response);
-            FindHandler(request, response);
-        }
+            var semaphore = new Semaphore(_pandaConfig.MaximumConnectionCount, _pandaConfig.MaximumConnectionCount);
+            while (_listener.IsListening)
+            {
+                semaphore.WaitOne();
+
+                _listener.GetContextAsync().ContinueWith(async (contextTask) =>
+                {
+                    semaphore.Release();
+                    var context = await contextTask.ConfigureAwait(false);
+                    var request = context.Request;
+                    var response = context.Response;
+                    ConfigResponse(ref response);
+                    await FindHandler(request, response).ConfigureAwait(false);
+                });
+            }
+        });
     }
 
     /// <summary>
@@ -123,9 +122,7 @@ public class PandaServer
     public void Stop()
     {
         if (!_listener.IsListening) return;
-
         _listener.Stop();
-        _isListen = false;
     }
 
     /// <summary>
@@ -134,16 +131,14 @@ public class PandaServer
     /// <param name="response"></param>
     private void ConfigResponse(ref HttpListenerResponse response)
     {
-        if (_configuration is null) return;
-        if (_configuration.ContentType is not null)
-            response.ContentType = _configuration.ContentType;
-        foreach (var (key, value) in _configuration.Headers)
+        _pandaConfig.FixHeader();
+        foreach (var (key, value) in _pandaConfig.Headers)
         {
             response.Headers.Remove(key);
             response.Headers.Add(key, value);
         }
 
-        foreach (var (key, value) in _configuration.CustomHeaders)
+        foreach (var (key, value) in _pandaConfig.CustomHeaders)
         {
             response.Headers.Remove(key);
             response.Headers.Add(key, value);
@@ -155,7 +150,7 @@ public class PandaServer
     /// </summary>
     /// <param name="request"></param>
     /// <param name="response"></param>
-    private void FindHandler(HttpListenerRequest request, HttpListenerResponse response)
+    private Task FindHandler(HttpListenerRequest request, HttpListenerResponse response)
     {
         var rawUrl = request.RawUrl;
         var requestHttpMethod = request.HttpMethod;
@@ -165,8 +160,9 @@ public class PandaServer
         if (rawUrl is null)
         {
             MainError.NotFound(newResponse);
-            return;
+            return Task.CompletedTask;
         }
+
         rawUrl = rawUrl.Remove(0, 1);
         string path;
         if (rawUrl.Contains('?'))
@@ -183,14 +179,21 @@ public class PandaServer
         if (_methods.TryGetValue((requestHttpMethod, path), out var method))
         {
             method.Invoke(null, new object?[] {newRequest, newResponse});
-            return;
+            return Task.CompletedTask;
         }
 
         if (_errors.TryGetValue(HttpStatusCode.NotFound, out method))
         {
             method.Invoke(null, new object?[] {newRequest, newResponse});
-            return;
+            return Task.CompletedTask;
         }
+
         MainError.NotFound(newResponse);
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        if (_listener.IsListening) Stop();
     }
 }
