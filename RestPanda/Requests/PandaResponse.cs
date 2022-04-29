@@ -10,7 +10,8 @@ namespace RestPanda.Requests;
 public class PandaResponse
 {
     internal HttpListenerResponse Response { get; }
-    private bool _isComplete = false;
+
+    internal bool _isComplete = false;
     
     /// <summary>
     /// Main response ctor
@@ -47,30 +48,6 @@ public class PandaResponse
         output.Close();
     }
 
-    public void SendFile(FileStream fs)
-    {
-        var filename = Path.GetFileName(fs.Name);
-        Response.ContentLength64 = fs.Length;
-        Response.SendChunked = false;
-        Response.ContentType = System.Net.Mime.MediaTypeNames.Application.Octet;
-        Response.AddHeader("Content-disposition", "attachment; filename=" + filename);
-        var buffer = new byte[64 * 1024];
-        using (var bw = new BinaryWriter(Response.OutputStream))
-        {
-            int read;
-            while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                bw.Write(buffer, 0, read);
-                bw.Flush();
-            }
-
-            bw.Close();
-        }
-        Response.StatusCode = (int)HttpStatusCode.OK;
-        Response.StatusDescription = "OK";
-        Response.OutputStream.Close();
-    }
-    
     /// <summary>
     /// Add a new title or replace an existing one
     /// </summary>

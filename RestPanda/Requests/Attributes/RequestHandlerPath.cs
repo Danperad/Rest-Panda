@@ -4,7 +4,7 @@
 /// Attribute for request handler
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class RequestHandler : Attribute
+public class RequestHandlerPath : Attribute
 {
     public string Path { get; }
 
@@ -12,12 +12,12 @@ public class RequestHandler : Attribute
     /// Attribute for request handler
     /// </summary>
     /// <param name="path">The path of the requests</param>
-    public RequestHandler(string path)
+    public RequestHandlerPath(string path)
     {
         Path = path;
         if (Path.StartsWith("/")) Path = Path.Remove(0,1);
     }
-    public RequestHandler()
+    public RequestHandlerPath()
     {
         Path = "";
     }

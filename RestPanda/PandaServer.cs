@@ -11,33 +11,37 @@ public sealed class PandaServer : IDisposable
     #region Props
 
     private readonly HttpListener _listener;
-    private readonly IList<Uri> _urisList;
+    private readonly List<Uri> _urisList;
     private readonly PandaConfig _pandaConfig;
 
-    private readonly Dictionary<(string, string), MethodInfo> _methods = new();
+    // private readonly Dictionary<(string, string), MethodInfo> _methods = new();
 
-    private readonly Dictionary<HttpStatusCode, MethodInfo> _errors = new();
+    private readonly Dictionary<string, RequestHandler> _handlers = new();
 
     #endregion
 
     #region Constructors
 
-    public PandaServer(Type caller, params Uri[] urls) : this(new PandaConfig(), caller, urls)
+    public PandaServer(Uri url, params Uri[] urls) : this(new PandaConfig(), url, urls)
     {
     }
 
-    public PandaServer(PandaConfig pandaConfig, Type caller, params Uri[] urls) : this(pandaConfig, caller,
-        urls.ToList())
-    {
-    }
-
-    public PandaServer(PandaConfig pandaConfig, Type caller, IList<Uri> urls)
+    public PandaServer(PandaConfig pandaConfig, Uri url, params Uri[] urls)
     {
         _listener = new HttpListener();
-        _urisList = urls;
+        _urisList = new List<Uri>(urls) {url};
         if (_urisList.Count == 0) throw new EmptyUrlsException();
         _pandaConfig = pandaConfig;
-        FindAllHandlers(caller);
+        FindAllHandlers();
+    }
+
+    public PandaServer(PandaConfig pandaConfig, IEnumerable<Uri> urls)
+    {
+        _listener = new HttpListener();
+        _urisList = new List<Uri>(urls);
+        if (_urisList.Count == 0) throw new EmptyUrlsException();
+        _pandaConfig = pandaConfig;
+        FindAllHandlers();
     }
 
     #endregion
@@ -45,40 +49,20 @@ public sealed class PandaServer : IDisposable
     /// <summary>
     /// Search all request handler
     /// </summary>
-    /// <param name="caller">Class from project with request handlers</param>
-    private void FindAllHandlers(Type caller)
+    private void FindAllHandlers()
     {
-        foreach (var type in caller.Assembly.GetTypes())
+        foreach (var type in 
+                 Assembly.GetEntryAssembly()!.GetTypes()
+                     .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(RequestHandler))))
         {
-            var handler = type.GetCustomAttribute(typeof(RequestHandler), false);
-            if (handler is null)
-            {
-                handler = type.GetCustomAttribute(typeof(ErrorHandler), false);
-                if (handler is null) continue;
-                foreach (var method in type.GetMethods())
-                {
-                    var methodAtr = method.GetCustomAttribute(typeof(Error));
-                    if (methodAtr is null) continue;
-                    _errors[((Error) methodAtr).Code] = method;
-                }
-
-                continue;
-            }
-
-            var mainPath = ((RequestHandler) handler).Path;
-            foreach (var method in type.GetMethods())
-            {
-                var methodAtr = method.GetCustomAttribute(typeof(Get));
-                if (methodAtr is not null)
-                    _methods[("GET", mainPath + ((Get) methodAtr).Path)] = method;
-                else if ((methodAtr = method.GetCustomAttribute(typeof(Post))) is not null)
-                    _methods[("POST", mainPath + ((Post) methodAtr).Path)] = method;
-            }
+            var assemblyType = (RequestHandler) Activator.CreateInstance(type)!;
+            var ss = assemblyType.GetType().GetCustomAttribute(typeof(RequestHandlerPath));
+            if (ss is null) throw new CustomAttributeFormatException("Request Path Attribute Not Found");
+            _handlers[((RequestHandlerPath) ss).Path] = assemblyType;
         }
-
-        if (_methods.Count == 0) throw new NoHandlersException("Handlers not found");
+        if (_handlers.Count == 0) throw new NoHandlersException("Handlers not found");
     }
-
+    
     private void Initialize()
     {
         if (_listener.Prefixes.Count != 0) return;
@@ -162,7 +146,7 @@ public sealed class PandaServer : IDisposable
             MainError.NotFound(newResponse);
             return Task.CompletedTask;
         }
-
+        
         rawUrl = rawUrl.Remove(0, 1);
         string path;
         if (rawUrl.Contains('?'))
@@ -176,16 +160,17 @@ public sealed class PandaServer : IDisposable
             newRequest = new PandaRequest(request);
         }
 
-        if (_methods.TryGetValue((requestHttpMethod, path), out var method))
+        if (requestHttpMethod == "OPTIONS")
         {
-            method.Invoke(null, new object?[] {newRequest, newResponse});
+            OptionsHandler.Option(newRequest, newResponse);
             return Task.CompletedTask;
         }
-
-        if (_errors.TryGetValue(HttpStatusCode.NotFound, out method))
+        if (_handlers.TryGetValue(path[..path.LastIndexOf("/", StringComparison.Ordinal)], out var type))
         {
-            method.Invoke(null, new object?[] {newRequest, newResponse});
-            return Task.CompletedTask;
+            type.Request = newRequest;
+            type.Response = newResponse;
+            type.FindHandler(requestHttpMethod, path[path.LastIndexOf('/')..]);
+            if (newResponse._isComplete) return Task.CompletedTask;
         }
 
         MainError.NotFound(newResponse);

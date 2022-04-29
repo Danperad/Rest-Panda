@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections.ObjectModel;
+using System.Net;
 using System.Text.Json;
 
 namespace RestPanda.Requests;
@@ -8,9 +9,8 @@ namespace RestPanda.Requests;
 /// </summary>
 public class PandaRequest
 {
-    private HttpListenerRequest _request;
-    public Dictionary<string, string> Params { get; } = new ();
-
+    private readonly HttpListenerRequest _request;
+    public ReadOnlyDictionary<string, string> Params { get; private init; }
     public Stream InputStream => _request.InputStream;
     /// <summary>
     /// Main request ctor
@@ -19,6 +19,7 @@ public class PandaRequest
     internal PandaRequest(HttpListenerRequest request)
     {
         _request = request;
+        Params = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
     }
     /// <summary>
     /// Request constructor with parameters
@@ -28,11 +29,14 @@ public class PandaRequest
     internal PandaRequest(HttpListenerRequest request, string param) : this(request)
     {
         var s = param.Split('&');
+        var paramss = new Dictionary<string, string>();
         foreach (var keys in s)
         {
             var d = keys.Split('=');
-            Params[d[0]] = d.Length == 2 ? d[1] : "";
+            paramss[d[0]] = d.Length == 2 ? d[1] : "";
         }
+
+        Params = new ReadOnlyDictionary<string, string>(paramss);
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ using RestPanda;
 var config = new PandaConfig();
 
 var urls = new List<Uri>(new []{new Uri("http://localhost:8888/"),new Uri("http://127.0.0.1:8889/")});
-using var server = new PandaServer(config, typeof(Program), urls);
+using var server = new PandaServer(config, urls);
 
 server.Start();
 Console.Read();
@@ -27,30 +27,30 @@ server.Stop();
 #### GetString
 ```csharp
 using System.Text;
-using System.Text.Json;
 using RestPanda.Requests;
+using RestPanda.Requests.Attributes;
 
-namespace AnyName.Space;
+namespace RestPanda.Sample;
 
-[RequestHandler("/auth")]
-public class GetString
+[RequestHandlerPath("/auth")]
+public class GetString : RequestHandler
 {
     [Get("/getstr")]
-    public static void GetUser(PandaRequest request, PandaResponse response)
+    public void GetUser()
     {
         var builder = new StringBuilder("{\"user\": \"");
-        builder.Append(request.Params["user"]).Append("\"}");
-        response.AddHeader("Time", DateTime.Now.ToString("O"));
-        response.Send(builder.ToString());
+        builder.Append(Params["user"]).Append("\"}");
+        AddHeader("Time", DateTime.Now.ToString("O"));
+        Send(builder.ToString());
     }
     
     [Post("/getstr")]
-    public static void SetUser(PandaRequest request, PandaResponse response)
+    public void SetUser()
     {
-        response.AddHeader("Time", DateTime.Now.ToString("O"));
-        var user = request.GetObject<User>();
-        if (user?.Name != null) response.Send(user.Name);
-        response.Send("");
+        AddHeader("Time", DateTime.Now.ToString("O"));
+        var user = Bind<User>();
+        if (user?.Name != null) Send(user.Name);
+        Send("");
     }
 }
 ```
