@@ -9,10 +9,14 @@ public abstract class RequestHandler
 {
     internal PandaRequest? Request { get; set; }
     internal PandaResponse? Response { get; set; }
-
+    
     protected ReadOnlyDictionary<string, string> Params => Request is null
         ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>())
         : Request.Params;
+
+    protected ReadOnlyDictionary<string, string> Headers => Request is null
+        ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>())
+        : Request.Headers;
 
     protected internal void FindHandler(string httpMethod, string path)
     {

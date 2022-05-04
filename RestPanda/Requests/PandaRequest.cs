@@ -11,7 +11,9 @@ public class PandaRequest
 {
     private readonly HttpListenerRequest _request;
     public ReadOnlyDictionary<string, string> Params { get; private init; }
+    public ReadOnlyDictionary<string, string> Headers { get; private init; }
     public Stream InputStream => _request.InputStream;
+
     /// <summary>
     /// Main request ctor
     /// </summary>
@@ -20,7 +22,15 @@ public class PandaRequest
     {
         _request = request;
         Params = new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
+        var temp = new Dictionary<string, string>();
+        foreach (var key in _request.Headers.AllKeys)
+        {
+            temp[key!] = _request.Headers[key!]!;
+        }
+
+        Headers = new ReadOnlyDictionary<string, string>(temp);
     }
+
     /// <summary>
     /// Request constructor with parameters
     /// </summary>
@@ -57,7 +67,7 @@ public class PandaRequest
         reader.Close();
         return true;
     }
-    
+
     /// <summary>
     /// Get object from request
     /// </summary>
