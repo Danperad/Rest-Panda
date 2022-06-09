@@ -7,13 +7,20 @@ namespace RestPanda.Requests;
 /// <summary>
 /// Request class
 /// </summary>
-public class PandaRequest
+internal class PandaRequest
 {
     private readonly HttpListenerRequest _request;
-    public ReadOnlyDictionary<string, string> Params { get; private init; }
-    public ReadOnlyDictionary<string, string> Headers { get; private init; }
-    public Stream InputStream => _request.InputStream;
 
+    /// <summary>
+    /// Request parameters
+    /// </summary>
+    internal ReadOnlyDictionary<string, string> Params { get; }
+
+    /// <summary>
+    /// Request headers
+    /// </summary>
+    internal ReadOnlyDictionary<string, string> Headers { get; }
+    
     /// <summary>
     /// Main request ctor
     /// </summary>
@@ -39,14 +46,14 @@ public class PandaRequest
     internal PandaRequest(HttpListenerRequest request, string param) : this(request)
     {
         var s = param.Split('&');
-        var paramss = new Dictionary<string, string>();
+        var newParams = new Dictionary<string, string>();
         foreach (var keys in s)
         {
             var d = keys.Split('=');
-            paramss[d[0]] = d.Length == 2 ? d[1] : "";
+            newParams[d[0]] = d.Length == 2 ? d[1] : "";
         }
 
-        Params = new ReadOnlyDictionary<string, string>(paramss);
+        Params = new ReadOnlyDictionary<string, string>(newParams);
     }
 
     /// <summary>
@@ -73,18 +80,8 @@ public class PandaRequest
     /// </summary>
     /// <typeparam name="T">Type of object</typeparam>
     /// <returns></returns>
-    public T? GetObject<T>()
+    internal T? GetObject<T>()
     {
-        return (T?) GetObjectFromBody<T>();
-    }
-
-    private object? GetObjectFromBody<T>()
-    {
-        if (TryGetBody(out var body))
-        {
-            return JsonSerializer.Deserialize<T>(body);
-        }
-
-        return null;
+        return TryGetBody(out var body) ? JsonSerializer.Deserialize<T>(body) : default;
     }
 }

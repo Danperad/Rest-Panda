@@ -7,12 +7,15 @@ namespace RestPanda.Requests;
 /// <summary>
 /// Response class
 /// </summary>
-public class PandaResponse
+internal class PandaResponse : IDisposable
 {
     internal HttpListenerResponse Response { get; }
 
-    internal bool _isComplete = false;
-    
+    /// <summary>
+    /// Request execution status.
+    /// </summary>
+    internal bool IsComplete { get; private set; } = false;
+
     /// <summary>
     /// Main response ctor
     /// </summary>
@@ -26,10 +29,23 @@ public class PandaResponse
     /// Sending object (Serialized to json)
     /// </summary>
     /// <param name="obj"></param>
-    public void Send(object obj)
+    public void Send(object? obj)
     {
-        var result = JsonSerializer.Serialize(obj);
-        SetContentType("application/json");
+        string result;
+        if (obj is null)
+        {
+            Send("null");
+            return;
+        }
+        try
+        {
+            result = JsonSerializer.Serialize(obj);
+            SetContentType("application/json");
+        }
+        catch (NotSupportedException e)
+        {
+            result = obj.ToString() ?? "null";
+        }
         Send(result);
     }
 
@@ -39,13 +55,14 @@ public class PandaResponse
     /// <param name="response">Response Body</param>
     public void Send(string response)
     { 
-        if (_isComplete) return;
+        if (IsComplete) return;
         var buffer = Encoding.UTF8.GetBytes(response);
         Response.ContentLength64 = buffer.Length;
         var output = Response.OutputStream;
-        _isComplete = true;
+        IsComplete = true;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
+        Response.Close();
     }
 
     /// <summary>
@@ -69,8 +86,14 @@ public class PandaResponse
         Response.AddHeader(key, value);
     }
     
-    public void SetContentType(string value)
+    private void SetContentType(string value)
     {
         Response.ContentType = value;
+    }
+
+    public void Dispose()
+    {
+        Response.Close();
+        ((IDisposable) Response).Dispose();
     }
 }

@@ -1,32 +1,4 @@
-# Rest-Panda
-
-Simple HTTP Server
-
-## Installation
-
-```
-> dotnet add package RestPanda
-```
-
-## Examples
-
-#### Main
-```csharp
-using RestPanda;
-
-var config = new PandaConfig();
-
-var urls = new List<Uri>(new []{new Uri("http://localhost:8888/"),new Uri("http://127.0.0.1:8889/")});
-using var server = new PandaServer(config, urls);
-
-server.Start();
-Console.Read();
-server.Stop();
-```
-
-#### GetString
-```csharp
-using RestPanda.Requests;
+﻿using RestPanda.Requests;
 using RestPanda.Requests.Attributes;
 
 namespace RestPanda.Sample;
@@ -67,31 +39,3 @@ public class AuthHandler : RequestHandler
         Send(r);
     }
 }
-```
-
-#### Answer
-###### GET
-``` 
-HTTP/1.1 200 OK
-Content-Length: 16
-Content-Type: application/json
-Server: Microsoft-HTTPAPI/2.0
-Time: 2022-03-27T19:53:02.2694606+03:00
-Date: Sun, 27 Mar 2022 16:53:02 GMT
-
-true
-```
-###### POST
-``` 
-HTTP/1.1 200 OK
-Content-Length: 5
-Content-Type: application/json
-Server: Microsoft-HTTPAPI/2.0
-Time: 2022-03-27T20:00:51.2165526+03:00
-Date: Sun, 27 Mar 2022 17:00:51 GMT
-
-{
-    Login: Yes,
-    Password: No
-}
-```

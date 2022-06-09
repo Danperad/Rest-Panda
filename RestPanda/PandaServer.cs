@@ -6,6 +6,9 @@ using RestPanda.Requests.Attributes;
 
 namespace RestPanda;
 
+/// <summary>
+/// Central class for the request processing server.
+/// </summary>
 public sealed class PandaServer : IDisposable
 {
     #region Props
@@ -14,32 +17,46 @@ public sealed class PandaServer : IDisposable
     private readonly List<Uri> _urisList;
     private readonly PandaConfig _pandaConfig;
 
-    // private readonly Dictionary<(string, string), MethodInfo> _methods = new();
-
     private readonly Dictionary<string, RequestHandler> _handlers = new();
 
     #endregion
 
     #region Constructors
 
+    /// <summary>
+    /// Initialize a new instance of the PandaServer class with urls
+    /// </summary>
+    /// <param name="url">Binding address</param>
+    /// <param name="urls">Additional addresses for binding</param>
     public PandaServer(Uri url, params Uri[] urls) : this(new PandaConfig(), url, urls)
     {
     }
 
+    /// <summary>
+    /// Initialize a new instance of the PandaServer class with urls and the specific configuration.
+    /// </summary>
+    /// <param name="pandaConfig">Server Configuration</param>
+    /// <param name="url">Binding address</param>
+    /// <param name="urls">Additional addresses for binding</param>
     public PandaServer(PandaConfig pandaConfig, Uri url, params Uri[] urls)
     {
         _listener = new HttpListener();
         _urisList = new List<Uri>(urls) {url};
-        if (_urisList.Count == 0) throw new EmptyUrlsException();
         _pandaConfig = pandaConfig;
         FindAllHandlers();
     }
 
+    /// <summary>
+    /// Initialize a new instance of the PandaServer class with urls and the specific configuration.
+    /// </summary>
+    /// <param name="pandaConfig">Server Configuration</param>
+    /// <param name="urls">Addresses for binding</param>
+    /// <exception cref="EmptyUrlsException">There are no binding addresses</exception>
     public PandaServer(PandaConfig pandaConfig, IEnumerable<Uri> urls)
     {
         _listener = new HttpListener();
         _urisList = new List<Uri>(urls);
-        if (_urisList.Count == 0) throw new EmptyUrlsException();
+        if (_urisList.Count == 0) throw new EmptyUrlsException("Urls must be not empty");
         _pandaConfig = pandaConfig;
         FindAllHandlers();
     }
@@ -51,22 +68,27 @@ public sealed class PandaServer : IDisposable
     /// </summary>
     private void FindAllHandlers()
     {
-        foreach (var type in 
+        foreach (var type in
                  Assembly.GetEntryAssembly()!.GetTypes()
-                     .Where(myType => myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(RequestHandler))))
+                     .Where(myType =>
+                         myType.IsClass && !myType.IsAbstract && myType.IsSubclassOf(typeof(RequestHandler))))
         {
-            var assemblyType = (RequestHandler) Activator.CreateInstance(type)!;
-            var ss = assemblyType.GetType().GetCustomAttribute(typeof(RequestHandlerPath));
+            var ss = type.GetCustomAttribute<RequestHandlerPath>();
             if (ss is null) throw new CustomAttributeFormatException("Request Path Attribute Not Found");
-            _handlers[((RequestHandlerPath) ss).Path] = assemblyType;
+            var assemblyType = (RequestHandler) Activator.CreateInstance(type)!;
+            _handlers[ss.Path] = assemblyType;
         }
-        if (_handlers.Count == 0) throw new NoHandlersException("Handlers not found");
+
+        if (_handlers.Count == 0) throw new NoHandlersException();
     }
-    
+
+    /// <summary>
+    /// Adding uris to binding
+    /// </summary>
     private void Initialize()
     {
         if (_listener.Prefixes.Count != 0) return;
-        
+
         foreach (var uri in _urisList)
             _listener.Prefixes.Add($"{uri.Scheme}://{uri.Host}:{uri.Port}/");
     }
@@ -78,7 +100,7 @@ public sealed class PandaServer : IDisposable
     {
         if (_listener.IsListening) return;
         Initialize();
-        
+
         _listener.Start();
         Task.Run(() =>
         {
@@ -146,7 +168,7 @@ public sealed class PandaServer : IDisposable
             MainError.NotFound(newResponse);
             return Task.CompletedTask;
         }
-        
+
         rawUrl = rawUrl.Remove(0, 1);
         string path;
         if (rawUrl.Contains('?'))
@@ -165,18 +187,29 @@ public sealed class PandaServer : IDisposable
             OptionsHandler.Option(newRequest, newResponse);
             return Task.CompletedTask;
         }
-        if (_handlers.TryGetValue(path[..path.LastIndexOf("/", StringComparison.Ordinal)], out var type))
+
+        try
         {
-            type.Request = newRequest;
-            type.Response = newResponse;
-            type.FindHandler(requestHttpMethod, path[path.LastIndexOf('/')..]);
-            if (newResponse._isComplete) return Task.CompletedTask;
+            if (_handlers.TryGetValue(path[..path.LastIndexOf("/", StringComparison.Ordinal)], out var type))
+            {
+                type.Request = newRequest;
+                type.Response = newResponse;
+                type.FindHandler(requestHttpMethod, path[path.LastIndexOf('/')..], _pandaConfig.TimeOut);
+                if (newResponse.IsComplete) return Task.CompletedTask;
+            }
+        }
+        catch
+        {
+            // ignored
         }
 
         MainError.NotFound(newResponse);
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Stop and destroy server
+    /// </summary>
     public void Dispose()
     {
         if (_listener.IsListening) Stop();

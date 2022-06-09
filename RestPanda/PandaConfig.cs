@@ -2,14 +2,21 @@
 
 namespace RestPanda;
 
+/// <summary>
+/// The configuration for server 
+/// </summary>
 public class PandaConfig
 {
+    /// <summary>
+    /// Initialize a new instance of the PandaConfig class.
+    /// </summary>
     public PandaConfig()
     {
         Headers = new Dictionary<HttpResponseHeader, string>();
         CustomHeaders = new Dictionary<string, string>();
         Headers[HttpResponseHeader.Server] = "PandaServer";
         MaximumConnectionCount = ProcessorThreadCount;
+        TimeOut = 5000;
     }
     
     private static int ProcessorThreadCount
@@ -21,6 +28,9 @@ public class PandaConfig
         }
     }
     
+    /// <summary>
+    /// Maximum number of concurrent requests
+    /// </summary>
     public int MaximumConnectionCount { get; set; }
     
     /// <summary>
@@ -29,12 +39,12 @@ public class PandaConfig
     public Dictionary<HttpResponseHeader, string> Headers { get; }
 
     /// <summary>
-    /// Your response headers
+    /// Custom response headers
     /// </summary>
     public Dictionary<string, string> CustomHeaders { get; }
 
     /// <summary>
-    /// Add a new title or replace an existing one
+    /// Add a new header or replace an existing one
     /// </summary>
     /// <param name="key">Header</param>
     /// <param name="value"></param>
@@ -45,7 +55,7 @@ public class PandaConfig
     }
     
     /// <summary>
-    /// Add a new title or replace an existing one
+    /// Add a new header or replace an existing one
     /// </summary>
     /// <param name="key">Header</param>
     /// <param name="value"></param>
@@ -59,4 +69,9 @@ public class PandaConfig
     {
         Headers[HttpResponseHeader.Server] = "PandaServer";
     }
+    
+    /// <summary>
+    /// Time to Force Completion of a Request (ms)
+    /// </summary>
+    public uint TimeOut { get; set; }
 }

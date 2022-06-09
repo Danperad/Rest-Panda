@@ -8,9 +8,17 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
-        <Description>
-            Simple HTTP server
-            For more information see: https://github.com/Danperad/Rest-Panda
-        </Description>
+        <Description>Simple HTTP server</Description>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageVersion>1.5</PackageVersion>
+        <Title>Rest Panda</Title>
+        <Copyright>Kokorin Egor</Copyright>
+        <PackageProjectUrl>https://github.com/Danperad/Rest-Panda</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/Danperad/Rest-Panda</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageTags>HTTP</PackageTags>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DocumentationFile>bin\Release\RestPanda.xml</DocumentationFile>
     </PropertyGroup>
 </Project>

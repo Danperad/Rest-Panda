@@ -3,7 +3,7 @@
 namespace RestPanda.Requests.Attributes;
 
 [AttributeUsage(AttributeTargets.Method)]
-public class Error : Attribute
+internal class Error : Attribute
 {
     public HttpStatusCode Code { get; }
 

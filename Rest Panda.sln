@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda", "RestPanda\Rest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Sample", "RestPanda.Sample\RestPanda.Sample.csproj", "{411A540C-D78A-44A7-8C42-E81319DB8D8C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Tests", "RestPanda.Tests\RestPanda.Tests.csproj", "{8088227A-4F3E-4F11-874B-3492DA37619D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8088227A-4F3E-4F11-874B-3492DA37619D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8088227A-4F3E-4F11-874B-3492DA37619D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8088227A-4F3E-4F11-874B-3492DA37619D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8088227A-4F3E-4F11-874B-3492DA37619D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

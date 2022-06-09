@@ -1,25 +1,32 @@
 ﻿namespace RestPanda.Requests.Attributes;
 
 /// <summary>
-/// Attribute for POST requests
+/// Request POST mark.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
 public class Post : Attribute, IRequest
 {
+    /// <summary>
+    /// Request Endpoint.
+    /// </summary>
     public string Path { get; }
 
     /// <summary>
-    /// Attribute for POST requests
+    /// Initialize a new instance of the Post Attribute class with the specific path.
     /// </summary>
     /// <param name="path">The path of the request</param>
     public Post(string path)
     {
         Path = path;
-        if (!Path.StartsWith("/") && Path != "") Path = "/" + Path;
+        if (!Path.StartsWith("/") && Path.Length != 0) Path = "/" + Path;
+        if (Path.Count(c => c == '/') > 1 || Path.Length == 1) throw new NotSupportedException("Path error");
     }
 
-    public Post()
+    /// <summary>
+    /// Initialize a new instance of the Get Attribute class.
+    /// </summary>
+    private Post()
     {
-        Path = "";
+        Path = "/";
     }
 }

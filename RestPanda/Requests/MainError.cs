@@ -9,6 +9,14 @@ internal static class MainError
     internal static void NotFound(PandaResponse response)
     {
         response.Response.StatusCode = 404;
+        response.Response.ContentType = "application/json";
         response.Send("{\"error\": \"not found\"}");
+    }
+    
+    internal static void Timeout(PandaResponse response)
+    {
+        response.Response.StatusCode = 504;
+        response.Response.ContentType = "application/json";
+        response.Send("{\"error\": \"server don't answer\"}");
     }
 }

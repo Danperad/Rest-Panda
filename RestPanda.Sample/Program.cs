@@ -6,5 +6,5 @@ var urls = new List<Uri>(new []{new Uri("http://localhost:8888/"),new Uri("http:
 using var server = new PandaServer(config, urls);
 
 server.Start();
+Console.WriteLine("Server start");
 Console.Read();
-server.Stop();
