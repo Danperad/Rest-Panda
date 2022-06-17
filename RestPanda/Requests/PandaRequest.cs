@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Net;
 using System.Text.Json;
+using RestPanda.Exceptions;
 
 namespace RestPanda.Requests;
 
@@ -20,7 +21,7 @@ internal class PandaRequest
     /// Request headers
     /// </summary>
     internal ReadOnlyDictionary<string, string> Headers { get; }
-    
+
     /// <summary>
     /// Main request ctor
     /// </summary>
@@ -65,23 +66,41 @@ internal class PandaRequest
     {
         body = "";
         if (!_request.HasEntityBody) return false;
-        var bodyStream = _request.InputStream;
-        var encoding = _request.ContentEncoding;
-        var reader = new StreamReader(bodyStream, encoding);
+        try
+        {
+            var bodyStream = _request.InputStream;
+            var encoding = _request.ContentEncoding;
+            var reader = new StreamReader(bodyStream, encoding);
 
-        body = reader.ReadToEnd();
-        bodyStream.Close();
-        reader.Close();
+            body = reader.ReadToEnd();
+            bodyStream.Close();
+            reader.Close();
+        }
+        catch
+        {
+            throw new EmptyBodyException();
+        }
+
         return true;
     }
 
     /// <summary>
     /// Get object from request
     /// </summary>
-    /// <typeparam name="T">Type of object</typeparam>
+    /// <typeparam name="T">Type of object with empty constructor</typeparam>
     /// <returns></returns>
     internal T? GetObject<T>()
     {
-        return TryGetBody(out var body) ? JsonSerializer.Deserialize<T>(body) : default;
+        if (!TryGetBody(out var body)) return default;
+        try
+        {
+            return JsonSerializer.Deserialize<T>(body);
+        }
+        catch (NotSupportedException e)
+        {
+            Console.WriteLine("Hint - T must contain an empty constructor");
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }
