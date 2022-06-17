@@ -7,7 +7,7 @@ namespace RestPanda.Requests;
 /// <summary>
 /// Response class
 /// </summary>
-internal class PandaResponse : IDisposable
+internal class PandaResponse
 {
     internal HttpListenerResponse Response { get; }
 
@@ -31,6 +31,7 @@ internal class PandaResponse : IDisposable
     /// <param name="obj"></param>
     public void Send(object? obj)
     {
+        if (IsComplete) return;
         string result;
         if (obj is null)
         {
@@ -42,7 +43,7 @@ internal class PandaResponse : IDisposable
             result = JsonSerializer.Serialize(obj);
             SetContentType("application/json");
         }
-        catch (NotSupportedException e)
+        catch (NotSupportedException)
         {
             result = obj.ToString() ?? "null";
         }
@@ -59,10 +60,10 @@ internal class PandaResponse : IDisposable
         var buffer = Encoding.UTF8.GetBytes(response);
         Response.ContentLength64 = buffer.Length;
         var output = Response.OutputStream;
-        IsComplete = true;
         output.Write(buffer, 0, buffer.Length);
         output.Close();
         Response.Close();
+        IsComplete = true;
     }
 
     /// <summary>
@@ -89,11 +90,5 @@ internal class PandaResponse : IDisposable
     private void SetContentType(string value)
     {
         Response.ContentType = value;
-    }
-
-    public void Dispose()
-    {
-        Response.Close();
-        ((IDisposable) Response).Dispose();
     }
 }

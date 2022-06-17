@@ -11,8 +11,21 @@ namespace RestPanda.Requests;
 /// </summary>
 public abstract class RequestHandler
 {
-    internal PandaRequest? Request { get; set; }
+    private PandaRequest? _request;
+
+    internal PandaRequest? Request
+    {
+        get => _request;
+        set
+        {
+            _request = value;
+            _isCompleted = false;
+        }
+    }
+
     internal PandaResponse? Response { get; set; }
+
+    private bool _isCompleted = false;
 
     /// <summary>
     /// Request parameters
@@ -48,10 +61,10 @@ public abstract class RequestHandler
             timer.Enabled = true;
             timer.Elapsed += (_, _) =>
             {
-                if (Response is not null) MainError.Timeout(Response);
+                if (Response is not null && !Response.IsComplete) MainError.Timeout(Response);
             };
             method.Invoke(this, null);
-            while (Response is not null)
+            while (Response is not null && !Response.IsComplete)
             {
             }
 
@@ -88,7 +101,8 @@ public abstract class RequestHandler
     /// <param name="answer"></param>
     protected void Send(string answer)
     {
-        if (Response is null) return;
+        if (_isCompleted) return;
+        _isCompleted = true;
         Response?.Send(answer);
         Request = null;
         Response = null;
@@ -100,7 +114,8 @@ public abstract class RequestHandler
     /// <param name="answer"></param>
     protected void Send(object? answer)
     {
-        if (Response is null) return;
+        if (_isCompleted) return;
+        _isCompleted = true;
         Response?.Send(answer);
         Request = null;
         Response = null;
@@ -138,7 +153,7 @@ public abstract class RequestHandler
     /// </summary>
     /// <param name="key">Params name</param>
     /// <typeparam name="T">New type (IConvertible)</typeparam>
-    /// <returns>Value or null</returns>
+    /// <returns>Value or default</returns>
     protected T? GetParams<T>(string key) where T : IConvertible
     {
         if (Request == null) throw new NullReferenceException();
