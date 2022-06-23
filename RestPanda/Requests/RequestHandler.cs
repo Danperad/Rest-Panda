@@ -11,9 +11,9 @@ namespace RestPanda.Requests;
 /// </summary>
 public abstract class RequestHandler
 {
-    private PandaRequest? _request;
+    private PandaRequest _request = null!;
 
-    internal PandaRequest? Request
+    internal PandaRequest Request
     {
         get => _request;
         set
@@ -23,21 +23,21 @@ public abstract class RequestHandler
         }
     }
 
-    internal PandaResponse? Response { get; set; }
+    internal PandaResponse Response { get; set; } = null!;
 
-    private bool _isCompleted = false;
+    private bool _isCompleted = true;
 
     /// <summary>
     /// Request parameters
     /// </summary>
-    protected ReadOnlyDictionary<string, string> Params => Request is null
+    protected ReadOnlyDictionary<string, string> Params => _isCompleted
         ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>())
         : Request.Params;
 
     /// <summary>
     /// Request headers
     /// </summary>
-    protected ReadOnlyDictionary<string, string> Headers => Request is null
+    protected ReadOnlyDictionary<string, string> Headers => _isCompleted
         ? new ReadOnlyDictionary<string, string>(new Dictionary<string, string>())
         : Request.Headers;
 
@@ -61,10 +61,10 @@ public abstract class RequestHandler
             timer.Enabled = true;
             timer.Elapsed += (_, _) =>
             {
-                if (Response is not null && !Response.IsComplete) MainError.Timeout(Response);
+                if (!Response.IsComplete) MainError.Timeout(Response);
             };
             method.Invoke(this, null);
-            while (Response is not null && !Response.IsComplete)
+            while (!Response.IsComplete)
             {
             }
 
@@ -82,7 +82,7 @@ public abstract class RequestHandler
     /// <param name="value"></param>
     protected void AddHeader(HttpResponseHeader key, string value)
     {
-        Response?.AddHeader(key, value);
+        Response.AddHeader(key, value);
     }
 
     /// <summary>
@@ -92,7 +92,7 @@ public abstract class RequestHandler
     /// <param name="value"></param>
     protected void AddHeader(string key, string value)
     {
-        Response?.AddHeader(key, value);
+        Response.AddHeader(key, value);
     }
 
     /// <summary>
@@ -104,8 +104,6 @@ public abstract class RequestHandler
         if (_isCompleted) return;
         _isCompleted = true;
         Response?.Send(answer);
-        Request = null;
-        Response = null;
     }
 
     /// <summary>
@@ -116,9 +114,7 @@ public abstract class RequestHandler
     {
         if (_isCompleted) return;
         _isCompleted = true;
-        Response?.Send(answer);
-        Request = null;
-        Response = null;
+        Response.Send(answer);
     }
 
     #endregion
@@ -133,7 +129,7 @@ public abstract class RequestHandler
     public bool TryGetBody(out string body)
     {
         body = "";
-        return Request is not null && Request.TryGetBody(out body);
+        return !_isCompleted && Request.TryGetBody(out body);
     }
 
     /// <summary>
@@ -144,7 +140,7 @@ public abstract class RequestHandler
     /// <exception cref="NullReferenceException">Request does not exist</exception>
     protected T? Bind<T>()
     {
-        if (Request != null) return Request.GetObject<T>();
+        if (!_isCompleted) return Request.GetObject<T>();
         throw new NullReferenceException();
     }
 
@@ -156,9 +152,18 @@ public abstract class RequestHandler
     /// <returns>Value or default</returns>
     protected T? GetParams<T>(string key) where T : IConvertible
     {
-        if (Request == null) throw new NullReferenceException();
+        if (_isCompleted) throw new NullReferenceException();
         if (!Params.TryGetValue(key, out var value)) return default;
-        return (T?) Convert.ChangeType(value, typeof(T));
+        T? res = default;
+        try
+        {
+            res = (T?) Convert.ChangeType(value, typeof(T));
+        }
+        catch
+        {
+            // ignored
+        }
+        return res; 
     }
 
     #endregion

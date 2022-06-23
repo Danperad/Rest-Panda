@@ -10,7 +10,7 @@
         <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
         <Description>Simple HTTP server</Description>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <PackageVersion>1.5.1</PackageVersion>
+        <PackageVersion>1.5.2</PackageVersion>
         <Title>Rest Panda</Title>
         <Copyright>Kokorin Egor</Copyright>
         <PackageProjectUrl>https://github.com/Danperad/Rest-Panda</PackageProjectUrl>

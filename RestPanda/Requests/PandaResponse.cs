@@ -14,7 +14,7 @@ internal class PandaResponse
     /// <summary>
     /// Request execution status.
     /// </summary>
-    internal bool IsComplete { get; private set; } = false;
+    internal bool IsComplete { get; private set; }
 
     /// <summary>
     /// Main response ctor
@@ -43,7 +43,7 @@ internal class PandaResponse
             result = JsonSerializer.Serialize(obj);
             SetContentType("application/json");
         }
-        catch (NotSupportedException)
+        catch
         {
             result = obj.ToString() ?? "null";
         }
@@ -58,12 +58,19 @@ internal class PandaResponse
     { 
         if (IsComplete) return;
         var buffer = Encoding.UTF8.GetBytes(response);
-        Response.ContentLength64 = buffer.Length;
-        var output = Response.OutputStream;
-        output.Write(buffer, 0, buffer.Length);
-        output.Close();
-        Response.Close();
-        IsComplete = true;
+        try
+        {
+            Response.ContentLength64 = buffer.Length;
+            var output = Response.OutputStream;
+            output.Write(buffer, 0, buffer.Length);
+            output.Close();
+            Response.Close();
+        }
+        finally 
+        {
+            IsComplete = true;
+        }
+        
     }
 
     /// <summary>
@@ -71,24 +78,57 @@ internal class PandaResponse
     /// </summary>
     /// <param name="key">Header</param>
     /// <param name="value"></param>
-    public void AddHeader(HttpResponseHeader key, string value)
+    internal void AddHeader(HttpResponseHeader key, string value)
     {
         if (key == HttpResponseHeader.Server) return;
-        Response.Headers[key] = value;
+        try
+        {
+            Response.Headers[key] = value;
+        }
+        catch 
+        {
+            // ignored
+        }
     }
     /// <summary>
     /// Add a new title or replace an existing one
     /// </summary>
     /// <param name="key">Header</param>
     /// <param name="value"></param>
-    public void AddHeader(string key, string value)
+    internal void AddHeader(string key, string value)
     {
         if (key == "Server") return;
-        Response.AddHeader(key, value);
+        try
+        {
+            Response.AddHeader(key, value);
+        }
+        catch 
+        {
+            // ignored
+        }
     }
     
-    private void SetContentType(string value)
+    internal void SetContentType(string value)
     {
-        Response.ContentType = value;
+        try
+        {
+            Response.ContentType = value;
+        }
+        catch
+        {
+            // ignored
+        }
+    }
+
+    internal void SetStatusCode(int code)
+    {
+        try
+        {
+            Response.StatusCode = code;
+        }
+        catch
+        {
+            // ignored
+        }
     }
 }
