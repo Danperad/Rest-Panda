@@ -39,6 +39,7 @@ internal class PandaRequest
         Headers = new ReadOnlyDictionary<string, string>(temp);
     }
 
+    private string? _body;
     /// <summary>
     /// Request constructor with parameters
     /// </summary>
@@ -56,32 +57,35 @@ internal class PandaRequest
 
         Params = new ReadOnlyDictionary<string, string>(newParams);
     }
-
+    
     /// <summary>
     /// Getting the request body
     /// </summary>
     /// <param name="body">Request Body</param>
     /// <returns>Is there a request body</returns>
-    public bool TryGetBody(out string body)
+    internal bool TryGetBody(out string body)
     {
         body = "";
+        if (_body != null)
+        {
+            body = _body;
+            return true;
+        }
         if (!_request.HasEntityBody) return false;
         try
         {
-            var bodyStream = _request.InputStream;
+            using var bodyStream = _request.InputStream;
             var encoding = _request.ContentEncoding;
-            var reader = new StreamReader(bodyStream, encoding);
-
-            body = reader.ReadToEnd();
-            bodyStream.Close();
-            reader.Close();
+            using var reader = new StreamReader(bodyStream, encoding);
+            _body = reader.ReadToEnd();
+            body = _body;
+            return body != "";
         }
         catch
         {
+            _body = null;
             throw new EmptyBodyException();
         }
-
-        return true;
     }
 
     /// <summary>
@@ -98,7 +102,7 @@ internal class PandaRequest
         }
         catch (NotSupportedException e)
         {
-            Console.WriteLine("Hint - T must contain an empty constructor");
+            Console.WriteLine("Hint - T should contain an empty constructor");
             Console.WriteLine(e);
             throw;
         }
