@@ -1,10 +1,10 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda", "RestPanda\RestPanda.csproj", "{5D4827EF-C187-4321-B1A6-1B57BD896198}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{58BD2172-4870-4CD5-9570-2456EA08BFE3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Sample", "RestPanda.Sample\RestPanda.Sample.csproj", "{411A540C-D78A-44A7-8C42-E81319DB8D8C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Core", "src\RestPanda.Core\RestPanda.Core.csproj", "{2675C66A-750C-459B-B2E3-8C6D0214F3BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Tests", "RestPanda.Tests\RestPanda.Tests.csproj", "{8088227A-4F3E-4F11-874B-3492DA37619D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestPanda.Example", "RestPanda.Example\RestPanda.Example.csproj", "{67B77DCA-AAE5-46A3-8886-835BA1EF2801}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,17 +12,16 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5D4827EF-C187-4321-B1A6-1B57BD896198}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D4827EF-C187-4321-B1A6-1B57BD896198}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D4827EF-C187-4321-B1A6-1B57BD896198}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D4827EF-C187-4321-B1A6-1B57BD896198}.Release|Any CPU.Build.0 = Release|Any CPU
-		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{411A540C-D78A-44A7-8C42-E81319DB8D8C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8088227A-4F3E-4F11-874B-3492DA37619D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8088227A-4F3E-4F11-874B-3492DA37619D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8088227A-4F3E-4F11-874B-3492DA37619D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8088227A-4F3E-4F11-874B-3492DA37619D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2675C66A-750C-459B-B2E3-8C6D0214F3BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2675C66A-750C-459B-B2E3-8C6D0214F3BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2675C66A-750C-459B-B2E3-8C6D0214F3BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2675C66A-750C-459B-B2E3-8C6D0214F3BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{67B77DCA-AAE5-46A3-8886-835BA1EF2801}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67B77DCA-AAE5-46A3-8886-835BA1EF2801}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67B77DCA-AAE5-46A3-8886-835BA1EF2801}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67B77DCA-AAE5-46A3-8886-835BA1EF2801}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2675C66A-750C-459B-B2E3-8C6D0214F3BE} = {58BD2172-4870-4CD5-9570-2456EA08BFE3}
 	EndGlobalSection
 EndGlobal

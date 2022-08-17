@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\RestPanda\RestPanda.csproj" />
+      <ProjectReference Include="..\src\RestPanda.Core\RestPanda.Core.csproj" />
     </ItemGroup>
 
 </Project>
